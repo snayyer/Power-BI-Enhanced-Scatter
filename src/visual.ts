@@ -109,7 +109,7 @@ module powerbi.extensibility.visual {
     }
 
     export class EnhancedScatterChart implements IVisual {
-        public line: UpdateSelection<any>;
+        public line: Selection<any>;
         private static MaxMarginFactor: number = 0.25;
 
         private static AnimationDuration: number = 0;
@@ -584,6 +584,8 @@ module powerbi.extensibility.visual {
             this.axisGraphicsContextScrollable = this.svgScrollable
                 .append("g")
                 .classed(EnhancedScatterChart.AxisGraphicsContextClassName, true);
+
+            this.line = this.svgScrollable.append('g');
 
             this.clearCatcher = appendClearCatcher(this.axisGraphicsContextScrollable);
 
@@ -1971,8 +1973,9 @@ module powerbi.extensibility.visual {
             this.bindInteractivityService(
                 scatterMarkers,
                 dataPoints);
-                this.drawline();
+            this.drawline();
         }
+
         private drawline() {
             const data: EnhancedScatterChartData = this.data;
             const dataPoints: EnhancedScatterChartDataPoint[] = data.dataPoints;
@@ -1980,15 +1983,15 @@ module powerbi.extensibility.visual {
             this.maxY = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
             this.minX = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
             this.maxX = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
-            this.svg.append('line');
-            // line of type UpdateSelection<any>
-            this.line.selectAll('line').enter().append('line').attr({
+            let lines = this.line.selectAll('line').data(d => [d]).enter();
+            lines.append('line').attr({
                 x1: 100 + this.xAxisProperties.scale(this.minX),
                 y1: 0 + this.yAxisProperties.scale(this.minY),
                 x2: 100 + this.xAxisProperties.scale(this.maxX),
                 y2: 0 + this.yAxisProperties.scale(this.maxY)
             }).style('stroke', 'red');
         }
+        
         private bindTooltip(selection: Selection<TooltipEnabledDataPoint>): void {
             this.tooltipServiceWrapper.addTooltip(
                 selection,

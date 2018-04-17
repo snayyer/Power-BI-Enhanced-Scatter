@@ -1,10 +1,35 @@
-import { min, max } from "d3";
+/*
+ *  Power BI Visualizations
+ *
+ *  Copyright (c) Microsoft Corporation
+ *  All rights reserved.
+ *  MIT License
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the ""Software""), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
 
 module powerbi.extensibility.visual {
     // d3
     import Selection = d3.Selection;
     import UpdateSelection = d3.selection.Update;
     import LinearScale = d3.scale.Linear;
+    declare var nv: any;
 
     // powerbi.visuals
     import ISelectionId = powerbi.visuals.ISelectionId;
@@ -84,6 +109,7 @@ module powerbi.extensibility.visual {
     }
 
     export class EnhancedScatterChart implements IVisual {
+        public line: UpdateSelection<any>;
         private static MaxMarginFactor: number = 0.25;
 
         private static AnimationDuration: number = 0;
@@ -99,8 +125,8 @@ module powerbi.extensibility.visual {
         private static CrosshairTextMargin: number = 5;
         private static BubbleRadius = 1 * 1;
 
-        private static MinSizeRange = 2;
-        private static MaxSizeRange = 3;
+        private static MinSizeRange = 200;
+        private static MaxSizeRange = 3000;
 
         private static AreaOf300By300Chart = 90000;
 
@@ -192,7 +218,7 @@ module powerbi.extensibility.visual {
         private static MaxIterations: number = 2;
         private static DefaultNumIterations: number = 0;
         private static DefaultValueOfDoneWithMargins: boolean = false;
-        public line: any;
+
         private static AxisSide: number = 10;
         private static SecondYAxisSide: number = 15;
         private static SecondAxisSide: number = 20;
@@ -238,7 +264,7 @@ module powerbi.extensibility.visual {
         private static YAxisLabelTransformRotate: string = "rotate(-90)";
         private static DefaultDY: string = "1em";
 
-        private static StrokeWidth: number = 0.1;
+        private static StrokeWidth: number = 1;
 
         private static DefaultAxisOffset: number = 0;
 
@@ -283,6 +309,10 @@ module powerbi.extensibility.visual {
 
         public static RMask: number = 1;
         public static RMaskResult: number = 0;
+        public minY: number = EnhancedScatterChart.MinAxisValue;
+        public maxY: number = EnhancedScatterChart.MaxAxisValue;
+        public minX: number = EnhancedScatterChart.MinAxisValue;
+        public maxX: number = EnhancedScatterChart.MaxAxisValue;
 
         private tooltipServiceWrapper: ITooltipServiceWrapper;
 
@@ -337,6 +367,8 @@ module powerbi.extensibility.visual {
         private valueAxisHasUnitType: boolean;
         private svgDefaultImage: string = "";
         private oldBackdrop: string;
+
+        private Visual_Regression: boolean = true;
 
         private behavior: IInteractiveBehavior;
 
@@ -552,7 +584,6 @@ module powerbi.extensibility.visual {
             this.axisGraphicsContextScrollable = this.svgScrollable
                 .append("g")
                 .classed(EnhancedScatterChart.AxisGraphicsContextClassName, true);
-                
 
             this.clearCatcher = appendClearCatcher(this.axisGraphicsContextScrollable);
 
@@ -1472,7 +1503,6 @@ module powerbi.extensibility.visual {
             }
 
             this.setData(dataViews);
-
             this.renderLegend();
             this.render();
         }
@@ -1642,7 +1672,6 @@ module powerbi.extensibility.visual {
                 this.valueAxisProperties,
                 EnhancedScatterChart.TextProperties,
                 true);
-
 
             this.yAxisIsCategorical = this.yAxisProperties.isCategoryAxis;
 
@@ -1862,6 +1891,7 @@ module powerbi.extensibility.visual {
                     }
                 }
             }
+
             this.renderChart(
                 this.xAxisProperties,
                 this.yAxisProperties,
@@ -1869,8 +1899,8 @@ module powerbi.extensibility.visual {
                 chartHasAxisLabels,
                 axisLabels);
 
-
             this.updateAxis();
+
             if (!this.data) {
                 return;
             }
@@ -1883,6 +1913,7 @@ module powerbi.extensibility.visual {
                 "width": this.viewportIn.width,
                 "height": this.viewportIn.height
             });
+
             const sortedData: EnhancedScatterChartDataPoint[] = dataPoints.sort(
                 (firstDataPoint: EnhancedScatterChartDataPoint, secondDataPoint: EnhancedScatterChartDataPoint) => {
                     return secondDataPoint.radius.sizeMeasure
@@ -1934,40 +1965,29 @@ module powerbi.extensibility.visual {
             }
 
             this.renderCrosshair(data);
-           // this.drawLine(this.data, this.xAxisProperties, this.yAxisProperties);
+
             this.bindTooltip(scatterMarkers);
-            
+
             this.bindInteractivityService(
                 scatterMarkers,
                 dataPoints);
-
-
-       // }
-        //private drawLine(data, xaxis, yaxis) {
-            //regression line according to the input data
-            //  this.line = d3.svg.line()
-            //     .x(function (d) { return this.xAxisProperties.scale(data.xCol) })
-            //     .y(function (d) { return this.yAxisProerties.scale(data.yCol) });
-            //     this.xAxisProperties.scale.domain(d3.extent(this.data, function(data) {
-            //         return data.xCol;
-            //     }));
-            //     this.yAxisProperties.scale.domain(d3.extent(this.data, function(data) {
-            //         return data.yCol;
-            //     }))
-            //     this.svg.append("path")
-            //     .datum(data)
-            //     .attr("class", "line").style('fill', 'blue')
-            //     .attr("d", this.line);
-                // constant y axis-line with hard coded values so for
-                //TODO: make the line dynamic according to the input data
-            //d3.select('svg')
-           this.svg.append('line')
-            .attr({
-                x1: this.xAxisProperties.scale(0),
-                y1: this.yAxisProperties.scale(0),
-                x2: this.xAxisProperties.scale(max),
-                y2: this.yAxisProperties.scale(max)
-            }).style("stroke", "#000");
+                this.drawline();
+        }
+        private drawline() {
+            const data: EnhancedScatterChartData = this.data;
+            const dataPoints: EnhancedScatterChartDataPoint[] = data.dataPoints;
+            this.minY = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
+            this.maxY = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
+            this.minX = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
+            this.maxX = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
+            this.svg.append('line');
+            // line of type UpdateSelection<any>
+            this.line.selectAll('line').enter().append('line').attr({
+                x1: 100 + this.xAxisProperties.scale(this.minX),
+                y1: 0 + this.yAxisProperties.scale(this.minY),
+                x2: 100 + this.xAxisProperties.scale(this.maxX),
+                y2: 0 + this.yAxisProperties.scale(this.maxY)
+            }).style('stroke', 'red');
         }
         private bindTooltip(selection: Selection<TooltipEnabledDataPoint>): void {
             this.tooltipServiceWrapper.addTooltip(
@@ -2300,7 +2320,6 @@ module powerbi.extensibility.visual {
         /**
          * Public for testability.
          */
-
         public bindCrosshairEvents(): void {
             if (!this.axisGraphicsContextScrollable) {
                 return;
@@ -2538,9 +2557,6 @@ module powerbi.extensibility.visual {
                         .call(this.darkenZeroLine);
                 }
 
-
-
-
                 const yZeroTick: Selection<any> = this.y1AxisGraphicsContext
                     .selectAll(`g${EnhancedScatterChart.TickSelector.selector}`)
                     .filter((data: any) => data === EnhancedScatterChart.EmptyDataValue);
@@ -2697,11 +2713,7 @@ module powerbi.extensibility.visual {
             }
         }
 
-
-
         private updateAxis(): void {
-
-
             this.adjustMargins();
 
             const yAxisOrientation: string = this.yAxisOrientation,
@@ -2725,7 +2737,6 @@ module powerbi.extensibility.visual {
                 "width": this.viewport.width,
                 "height": this.viewport.height
             });
-            
 
             this.svgScrollable.attr({
                 "width": this.viewport.width,
@@ -2889,7 +2900,7 @@ module powerbi.extensibility.visual {
                     })
                     .attr("d", (dataPoint: EnhancedScatterChartDataPoint) => {
                         const r: number = EnhancedScatterChart.getBubbleRadius(dataPoint.radius, sizeRange, viewport),
-                            area: number = 50 //EnhancedScatterChart.RadiusMultiplexer * r * r;
+                            area: number = 20;//EnhancedScatterChart.RadiusMultiplexer * r * r;
 
                         return dataPoint.shapeSymbolType(area);
                     })

@@ -162,6 +162,12 @@ module powerbi.extensibility.visual {
                 "propertyName": "show"
             }
         },
+        "symmetryLine":{
+            "show":{
+                "objectName":"symmetryLine",
+                "propertyName":"show"
+            }
+        },
         "backdrop": {
             "show": {
                 "objectName": "backdrop",

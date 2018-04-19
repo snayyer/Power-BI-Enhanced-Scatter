@@ -26,7 +26,7 @@
         },
         {
             "name": "Size",
-            "kind": "Grouping",
+            "kind": "Measure",
             "displayName": "Size",
             "displayNameKey": "Role_DisplayName_Size"
         },
@@ -47,12 +47,6 @@
             "kind": "Measure",
             "displayName": "Shape",
             "displayNameKey": "Role_DisplayName_Shape"
-        },
-        {
-            "name": "Play Axis",
-            "kind": "GroupingOrMeasure",
-            "displayName": "Play Axis",
-            "displayNameKey": "Role_Display_axis"
         },
         {
             "name": "Image",
@@ -726,6 +720,19 @@
                     "displayName": "Fill",
                     "displayNameKey": "Visual_Fill",
                     "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "symmetryLine":{
+            "displayName": "Symmetry Line",
+            "displayNameKey": "Visual_SymmetryLine",
+            "properties":{
+                "show":{
+                    "displayName": "Symmetry",
+                    "displayNameKey":"Visual_Symmetry",
+                    "type":{
                         "bool": true
                     }
                 }

@@ -368,7 +368,7 @@ module powerbi.extensibility.visual {
         private svgDefaultImage: string = "";
         private oldBackdrop: string;
 
-        private Visual_Regression: boolean = true;
+        private Visual_Regression: boolean = false;
 
         private behavior: IInteractiveBehavior;
 
@@ -585,7 +585,7 @@ module powerbi.extensibility.visual {
                 .append("g")
                 .classed(EnhancedScatterChart.AxisGraphicsContextClassName, true);
 
-            this.line = this.svgScrollable.append('g');
+            this.line = this.axisGraphicsContext.append('line');
 
             this.clearCatcher = appendClearCatcher(this.axisGraphicsContextScrollable);
 
@@ -1973,25 +1973,28 @@ module powerbi.extensibility.visual {
             this.bindInteractivityService(
                 scatterMarkers,
                 dataPoints);
-            this.drawline();
+            if (this.Visual_Regression) {
+                this.drawline();
+            }
         }
 
         private drawline() {
             const data: EnhancedScatterChartData = this.data;
             const dataPoints: EnhancedScatterChartDataPoint[] = data.dataPoints;
-            this.minY = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
-            this.maxY = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
-            this.minX = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
-            this.maxX = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
-            let lines = this.line.selectAll('line').data(d => [d]).enter();
-            lines.append('line').attr({
-                x1: 100 + this.xAxisProperties.scale(this.minX),
-                y1: 0 + this.yAxisProperties.scale(this.minY),
-                x2: 100 + this.xAxisProperties.scale(this.maxX),
-                y2: 0 + this.yAxisProperties.scale(this.maxY)
-            }).style('stroke', 'red');
+            let minY = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
+            let maxY = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
+            let minX = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
+            let maxX = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
+            this.line
+                .attr({
+                    x1: this.xAxisProperties.scale(minX),
+                    x2: this.xAxisProperties.scale(maxX),
+                    y1: this.yAxisProperties.scale(minY),
+                    y2: this.yAxisProperties.scale(maxY)
+                })
+                .style('stroke', 'red');
         }
-        
+
         private bindTooltip(selection: Selection<TooltipEnabledDataPoint>): void {
             this.tooltipServiceWrapper.addTooltip(
                 selection,
@@ -2903,7 +2906,7 @@ module powerbi.extensibility.visual {
                     })
                     .attr("d", (dataPoint: EnhancedScatterChartDataPoint) => {
                         const r: number = EnhancedScatterChart.getBubbleRadius(dataPoint.radius, sizeRange, viewport),
-                            area: number = 20;//EnhancedScatterChart.RadiusMultiplexer * r * r;
+                            area: number = 8;//EnhancedScatterChart.RadiusMultiplexer * r * r;
 
                         return dataPoint.shapeSymbolType(area);
                     })
@@ -3313,6 +3316,15 @@ module powerbi.extensibility.visual {
                     });
 
                     break;
+                }
+                case "symmetryLine": {
+                    instances.push({
+                        objectName: "symmetryLine",
+                        selector: null,
+                        properties: {
+                            show: this.Visual_Regression
+                        }
+                    })
                 }
                 case "backdrop": {
                     instances.push({

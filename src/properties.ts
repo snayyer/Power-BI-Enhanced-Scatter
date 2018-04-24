@@ -156,6 +156,16 @@ module powerbi.extensibility.visual {
                 "propertyName": "fontSize"
             }
         },
+        "yConstantLine":{
+            "show":{
+                "objectName":"yConstantLine",
+                "propertyName": "show"
+            },
+            "start":{
+                "objectName":"yConstantLine",
+                "propertyName": "start"
+            }
+        },
         "fillPoint": {
             "show": {
                 "objectName": "fillPoint",

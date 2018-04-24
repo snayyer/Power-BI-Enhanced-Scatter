@@ -110,6 +110,7 @@ module powerbi.extensibility.visual {
 
     export class EnhancedScatterChart implements IVisual {
         public line: Selection<any>;
+        public ConstantLine: Selection<any>;
         private static MaxMarginFactor: number = 0.25;
 
         private static AnimationDuration: number = 0;
@@ -156,6 +157,7 @@ module powerbi.extensibility.visual {
         private static DefaultBackgroundPosition: number = 0;
 
         private static DefaultFillPoint: boolean = false;
+        private static DefaultLine: boolean = false;
         private static DefaultCrosshair: boolean = false;
         private static DefaultOutline: boolean = false;
         private static DefaultShowAllDataPoints: boolean = true;
@@ -368,7 +370,8 @@ module powerbi.extensibility.visual {
         private svgDefaultImage: string = "";
         private oldBackdrop: string;
 
-        private Visual_Regression: boolean = false;
+        private Visual_Regression: boolean = true;
+        private yLine:any;
 
         private behavior: IInteractiveBehavior;
 
@@ -586,6 +589,7 @@ module powerbi.extensibility.visual {
                 .classed(EnhancedScatterChart.AxisGraphicsContextClassName, true);
 
             this.line = this.axisGraphicsContext.append('line');
+            this.ConstantLine = this.axisGraphicsContext.append('line');
 
             this.clearCatcher = appendClearCatcher(this.axisGraphicsContextScrollable);
 
@@ -798,6 +802,7 @@ module powerbi.extensibility.visual {
 
             let dataLabelsSettings: PointDataLabelsSettings = dataLabelUtils.getDefaultPointLabelSettings(),
                 fillPoint: boolean = EnhancedScatterChart.DefaultFillPoint,
+                symmetryLine: boolean = EnhancedScatterChart.DefaultLine,
                 backdrop: EnhancedScatterChartBackdrop = {
                     show: EnhancedScatterChart.DefaultBackdrop.show,
                     url: EnhancedScatterChart.DefaultBackdrop.url
@@ -819,6 +824,7 @@ module powerbi.extensibility.visual {
                     PropertiesOfCapabilities["dataPoint"]["showAllDataPoints"]);
 
                 const labelsObj: DataViewObject = objects["categoryLabels"];
+                const yLineObj: DataViewObject = objects["yConstantLine"];
 
                 if (labelsObj) {
                     dataLabelsSettings.show = (labelsObj["show"] !== undefined)
@@ -838,6 +844,12 @@ module powerbi.extensibility.visual {
                     objects,
                     PropertiesOfCapabilities["fillPoint"]["show"],
                     fillPoint);
+
+                symmetryLine = DataViewObjects.getValue<boolean>(
+                    objects,
+                    PropertiesOfCapabilities["symmetryLine"]["show"],
+                    symmetryLine
+                );
 
                 const backdropObject: DataViewObject = objects["backdrop"];
 
@@ -962,6 +974,7 @@ module powerbi.extensibility.visual {
                 hasDynamicSeries,
                 showAllDataPoints,
                 fillPoint,
+                symmetryLine,
                 useShape,
                 useCustomColor,
                 backdrop,
@@ -1973,9 +1986,8 @@ module powerbi.extensibility.visual {
             this.bindInteractivityService(
                 scatterMarkers,
                 dataPoints);
-            if (this.Visual_Regression) {
-                this.drawline();
-            }
+            this.drawline()
+            this.yConstant()
         }
 
         private drawline() {
@@ -1992,7 +2004,25 @@ module powerbi.extensibility.visual {
                     y1: this.yAxisProperties.scale(minY),
                     y2: this.yAxisProperties.scale(maxY)
                 })
+                .attr("class", "symmetry").style('display', 'block')
                 .style('stroke', 'red');
+        }
+        private yConstant() {
+            const data: EnhancedScatterChartData = this.data;
+            const dataPoints: EnhancedScatterChartDataPoint[] = data.dataPoints;
+            let minY = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
+            let maxY = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
+            let minX = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
+            let maxX = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
+            this.ConstantLine
+                .attr({
+                    x1: this.xAxisProperties.scale(44.6),
+                    x2: this.xAxisProperties.scale(46.4),
+                    y1: this.yAxisProperties.scale(-109.5),
+                    y2: this.yAxisProperties.scale(-109.5)
+                })
+                .attr("class", "constant")
+                .style('stroke', 'blue');
         }
 
         private bindTooltip(selection: Selection<TooltipEnabledDataPoint>): void {
@@ -3299,6 +3329,9 @@ module powerbi.extensibility.visual {
 
                     break;
                 }
+                case "yConstantLine": {
+                    this.getConstantLineValue(instances);
+                }
                 case "fillPoint": {
                     const sizeRange: ValueRange<number> = this.data.sizeRange;
 
@@ -3318,13 +3351,21 @@ module powerbi.extensibility.visual {
                     break;
                 }
                 case "symmetryLine": {
+
+                    if (this.data.symmetryLine) {
+                        this.line.style('display', 'block');
+                    }
+                    if (!this.data.symmetryLine) {
+                        this.line.style('display', 'none');
+                    }
                     instances.push({
                         objectName: "symmetryLine",
                         selector: null,
                         properties: {
-                            show: this.Visual_Regression
+                            show: this.data.symmetryLine
                         }
-                    })
+                    });
+                    break;
                 }
                 case "backdrop": {
                     instances.push({
@@ -3510,6 +3551,24 @@ module powerbi.extensibility.visual {
                         : [axisStyle.showTitleOnly]
                 }
             });
+        }
+
+        private getConstantLineValue(instances: VisualObjectInstance[]): void {
+            const instance: VisualObjectInstance = {
+                selector: null,
+                properties: {},
+                objectName: "yConstantLine",
+                validValues: {
+                }
+            }
+            instance.properties["show"] = this.yLine && this.yLine["show"] != null
+                ? this.yLine["show"]
+                : true;
+            instance.properties["start"] = this.yLine
+                ? this.yLine["start"]
+                : null;
+            instances.push(instance);
+
         }
 
         // TODO: wrap all these object getters and other related stuff into an interface

@@ -712,6 +712,26 @@
                 }
             }
         },
+        "yConstantLine": {
+            "displayName": "Y-Constant Line",
+            "displayNameKey": "Visual_Constant_Line",
+            "properties": {
+                "show": {
+                    "displayName": "Show",
+                    "displayNameKey": "Visual_Show",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "start": {
+                    "displayName": "Value",
+                    "displayNameKey": "Visual_Axis_Start",
+                    "type": {
+                            "numeric": true
+                        }
+                    }
+                }
+            },
         "fillPoint": {
             "displayName": "Fill point",
             "displayNameKey": "Visual_FillPoint",

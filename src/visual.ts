@@ -1987,23 +1987,25 @@ module powerbi.extensibility.visual {
                 scatterMarkers,
                 dataPoints);
             this.drawline()
-            this.yConstant()
+           // this.yConstant()
         }
 
         private drawline() {
             const data: EnhancedScatterChartData = this.data;
             const dataPoints: EnhancedScatterChartDataPoint[] = data.dataPoints;
-            let axis: EnhancedScatterChartAxesLabels;
-            let minY = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
-            let maxY = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
-            let minX = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
-            let maxX = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
-            this.line
-                .attr({
-                    x1:  this.xAxisProperties.scale(EnhancedScatterChart.MinAxisValue),
-                    x2:  this.xAxisProperties.scale(EnhancedScatterChart.MaxAxisValue),
-                    y1:  this.yAxisProperties.scale(EnhancedScatterChart.MinAxisValue),
-                    y2:  this.yAxisProperties.scale(EnhancedScatterChart.MaxAxisValue),
+            const xDomain = this.xAxisProperties.values;
+            const yDomain = this.yAxisProperties.values
+            // for (let i=0; i< yDomain.length; i++){
+            //     yDomain[i].replace(',','');
+            // } 
+            // for (let i=0; i< xDomain.length; i++){
+            //    xDomain[i].replace(',','');
+            // } 
+              this.line.attr({
+                    x1: this.xAxisProperties.scale(xDomain[0]),
+                    x2: this.xAxisProperties.scale(xDomain[xDomain.length - 1]),
+                    y1: this.yAxisProperties.scale(yDomain[0]),
+                    y2: this.yAxisProperties.scale(yDomain[yDomain.length - 1]),
                 })
                 .attr("class", "symmetry").style('display', 'block')
                 .style('stroke', 'red');
@@ -3330,9 +3332,9 @@ module powerbi.extensibility.visual {
 
                     break;
                 }
-                case "yConstantLine": {
-                    this.getConstantLineValue(instances);
-                }
+                // case "yConstantLine": {
+                //     this.getConstantLineValue(instances);
+                // }
                 case "fillPoint": {
                     const sizeRange: ValueRange<number> = this.data.sizeRange;
 

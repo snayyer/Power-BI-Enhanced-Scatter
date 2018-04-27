@@ -1993,16 +1993,17 @@ module powerbi.extensibility.visual {
         private drawline() {
             const data: EnhancedScatterChartData = this.data;
             const dataPoints: EnhancedScatterChartDataPoint[] = data.dataPoints;
+            let axis: EnhancedScatterChartAxesLabels;
             let minY = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
             let maxY = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.y);
             let minX = d3.min<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
             let maxX = d3.max<EnhancedScatterChartDataPoint, number>(dataPoints, dataPoint => dataPoint.x);
             this.line
                 .attr({
-                    x1: this.xAxisProperties.scale(minX),
-                    x2: this.xAxisProperties.scale(maxX),
-                    y1: this.yAxisProperties.scale(minY),
-                    y2: this.yAxisProperties.scale(maxY)
+                    x1:  this.xAxisProperties.scale(EnhancedScatterChart.MinAxisValue),
+                    x2:  this.xAxisProperties.scale(EnhancedScatterChart.MaxAxisValue),
+                    y1:  this.yAxisProperties.scale(EnhancedScatterChart.MinAxisValue),
+                    y2:  this.yAxisProperties.scale(EnhancedScatterChart.MaxAxisValue),
                 })
                 .attr("class", "symmetry").style('display', 'block')
                 .style('stroke', 'red');

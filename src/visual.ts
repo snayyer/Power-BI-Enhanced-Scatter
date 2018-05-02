@@ -1987,25 +1987,28 @@ module powerbi.extensibility.visual {
                 scatterMarkers,
                 dataPoints);
             this.drawline()
-           // this.yConstant()
+            this.yConstant()
         }
 
         private drawline() {
-            const data: EnhancedScatterChartData = this.data;
-            const dataPoints: EnhancedScatterChartDataPoint[] = data.dataPoints;
             const xDomain = this.xAxisProperties.values;
-            const yDomain = this.yAxisProperties.values
-            // for (let i=0; i< yDomain.length; i++){
-            //     yDomain[i].replace(',','');
-            // } 
-            // for (let i=0; i< xDomain.length; i++){
-            //    xDomain[i].replace(',','');
-            // } 
+            const yDomain = this.yAxisProperties.values;
+            console.log(yDomain);
+            var y=[];
+            for (var i=0; i< yDomain.length; i++){
+                y.push(parseFloat(yDomain[i].replace('M','')));
+            } 
+            this.yAxisProperties.values = y;
+            const yDom = this.yAxisProperties.values;
+            console.log(yDom);
+            for (let i=0; i< xDomain.length; i++){
+               xDomain[i].replace('M','');
+            } 
               this.line.attr({
-                    x1: this.xAxisProperties.scale(xDomain[0]),
-                    x2: this.xAxisProperties.scale(xDomain[xDomain.length - 1]),
-                    y1: this.yAxisProperties.scale(yDomain[0]),
-                    y2: this.yAxisProperties.scale(yDomain[yDomain.length - 1]),
+                    x1: this.xAxisProperties.scale(xDomain[0].replace('M','')),
+                    x2: this.xAxisProperties.scale(xDomain[xDomain.length - 1].replace('M','')),
+                    y1: this.yAxisProperties.scale(yDom[0]),
+                    y2: this.yAxisProperties.scale(yDom[yDom.length - 1])
                 })
                 .attr("class", "symmetry").style('display', 'block')
                 .style('stroke', 'red');
@@ -2418,8 +2421,8 @@ module powerbi.extensibility.visual {
             }
 
             let crosshairTextMargin: number = EnhancedScatterChart.CrosshairTextMargin,
-                xScale = <LinearScale<number, number>>this.xAxisProperties.scale,
-                yScale = <LinearScale<number, number>>this.yAxisProperties.scale,
+                xScale = <LinearScale<string, string>>this.xAxisProperties.scale,
+                yScale = <LinearScale<string, string>>this.yAxisProperties.scale,
                 xFormated: number,
                 yFormated: number;
 
@@ -3332,9 +3335,9 @@ module powerbi.extensibility.visual {
 
                     break;
                 }
-                // case "yConstantLine": {
-                //     this.getConstantLineValue(instances);
-                // }
+                case "yConstantLine": {
+                    this.getConstantLineValue(instances);
+                }
                 case "fillPoint": {
                     const sizeRange: ValueRange<number> = this.data.sizeRange;
 
@@ -3557,20 +3560,79 @@ module powerbi.extensibility.visual {
         }
 
         private getConstantLineValue(instances: VisualObjectInstance[]): void {
-            const instance: VisualObjectInstance = {
-                selector: null,
-                properties: {},
-                objectName: "yConstantLine",
-                validValues: {
-                }
+            const isScalar: boolean = true,
+            logPossible: boolean = false,
+            scaleOptions: string[] = [
+                axisScale.log,
+                axisScale.linear
+            ]; // until options can be update in propPane, show all options
+
+        if (!isScalar) {
+            if (this.categoryAxisProperties) {
+                this.categoryAxisProperties["start"] = null;
             }
-            instance.properties["show"] = this.yLine && this.yLine["show"] != null
-                ? this.yLine["show"]
-                : true;
-            instance.properties["start"] = this.yLine
-                ? this.yLine["start"]
+        }
+
+        const instance: VisualObjectInstance = {
+            selector: null,
+            properties: {},
+            objectName: "yConstantLine",
+            validValues: {
+                axisScale: scaleOptions
+            }
+        };
+
+        instance.properties["show"] = this.yLine && this.categoryAxisProperties["show"] != null
+            ? this.categoryAxisProperties["show"]
+            : true;
+
+      
+
+        instance.properties["axisType"] = isScalar
+            ? axisType.scalar
+            : axisType.categorical;
+
+        if (isScalar) {
+            instance.properties["axisScale"] = (this.categoryAxisProperties
+                && this.categoryAxisProperties["axisScale"] != null
+                && logPossible)
+                ? this.categoryAxisProperties["axisScale"]
+                : axisScale.linear;
+
+            instance.properties["start"] = this.categoryAxisProperties
+                ? this.categoryAxisProperties["start"]
                 : null;
-            instances.push(instance);
+        instances.push(instance);
+
+        instances.push({
+            selector: null,
+            properties: {
+                axisStyle: this.categoryAxisProperties && this.categoryAxisProperties["axisStyle"]
+                    ? this.categoryAxisProperties["axisStyle"]
+                    : axisStyle.showTitleOnly,
+                labelColor: this.categoryAxisProperties
+                    ? this.categoryAxisProperties["labelColor"]
+                    : null
+            },
+            objectName: "yConstantLine",
+            validValues: {
+            }
+        });
+    }
+            // const instance: VisualObjectInstance = {
+            //     selector: null,
+            //     properties: {},
+            //     objectName: "yConstantLine",
+            //     validValues: {
+            //     }
+            // }
+            // instance.properties["show"] = this.yLine && this.yLine["show"] != null
+            //     ? this.yLine["show"]
+            //     : true;
+            // instance.properties["start"] = this.yLine
+            //     ? this.yLine["start"]
+            //     : null;
+            // instances.push(instance);
 
         }
 

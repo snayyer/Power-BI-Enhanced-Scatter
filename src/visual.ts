@@ -1991,21 +1991,24 @@ module powerbi.extensibility.visual {
         }
 
         private drawline() {
-            const data: EnhancedScatterChartData = this.data;
-            const dataPoints: EnhancedScatterChartDataPoint[] = data.dataPoints;
             const xDomain = this.xAxisProperties.values;
-            const yDomain = this.yAxisProperties.values
-            // for (let i=0; i< yDomain.length; i++){
-            //     yDomain[i].replace(',','');
-            // } 
-            // for (let i=0; i< xDomain.length; i++){
-            //    xDomain[i].replace(',','');
-            // } 
+            const yDomain = this.yAxisProperties.values;
+            console.log(yDomain);
+            var y=[];
+            for (var i=0; i< yDomain.length; i++){
+                y.push(parseFloat(yDomain[i].replace('M','')));
+            } 
+            this.yAxisProperties.values = y;
+            const yDom = this.yAxisProperties.values;
+            console.log(yDom);
+            for (let i=0; i< xDomain.length; i++){
+               xDomain[i].replace('M','');
+            } 
               this.line.attr({
-                    x1: this.xAxisProperties.scale(xDomain[0]),
-                    x2: this.xAxisProperties.scale(xDomain[xDomain.length - 1]),
-                    y1: this.yAxisProperties.scale(yDomain[0]),
-                    y2: this.yAxisProperties.scale(yDomain[yDomain.length - 1]),
+                    x1: this.xAxisProperties.scale(xDomain[0].replace('M','')),
+                    x2: this.xAxisProperties.scale(xDomain[xDomain.length - 1].replace('M','')),
+                    y1: this.yAxisProperties.scale(yDom[0]),
+                    y2: this.yAxisProperties.scale(yDom[yDom.length - 1])
                 })
                 .attr("class", "symmetry").style('display', 'block')
                 .style('stroke', 'red');
@@ -2418,8 +2421,8 @@ module powerbi.extensibility.visual {
             }
 
             let crosshairTextMargin: number = EnhancedScatterChart.CrosshairTextMargin,
-                xScale = <LinearScale<number, number>>this.xAxisProperties.scale,
-                yScale = <LinearScale<number, number>>this.yAxisProperties.scale,
+                xScale = <LinearScale<string, string>>this.xAxisProperties.scale,
+                yScale = <LinearScale<string, string>>this.yAxisProperties.scale,
                 xFormated: number,
                 yFormated: number;
 
